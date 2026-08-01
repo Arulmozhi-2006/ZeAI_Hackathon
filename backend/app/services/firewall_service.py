@@ -38,6 +38,7 @@ class FirewallResult:
     flagged: bool
     llm_response: Optional[str] = None
     llm_provider: Optional[str] = None
+    llm_error: Optional[str] = None
     latency_ms: Optional[float] = None
 
 
@@ -104,6 +105,7 @@ async def process_prompt(
 
         llm_response_text = None
         llm_provider_used = None
+        llm_error_text = None
         latency_ms = None
 
         # 11a/11b. Forward to LLM if ALLOW
@@ -113,6 +115,12 @@ async def process_prompt(
             llm_response_text = result.response_text
             llm_provider_used = result.provider
             latency_ms = result.latency_ms
+
+            if result.error:
+                # Provider call failed (bad API key, bad model name, etc.)
+                # Surface this instead of silently returning an empty response.
+                llm_error_text = result.error
+                logger.error(f"LLM provider '{result.provider}' failed for prompt_log {prompt_log.id}: {result.error}")
 
             db.add(LLMResponse(
                 prompt_log_id=prompt_log.id,
@@ -160,6 +168,7 @@ async def process_prompt(
             flagged=verdict.flagged,
             llm_response=llm_response_text,
             llm_provider=llm_provider_used,
+            llm_error=llm_error_text,
             latency_ms=latency_ms,
         )
 

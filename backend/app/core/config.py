@@ -26,7 +26,7 @@ class Settings(BaseSettings):
 
     # Gemini
     GEMINI_API_KEY: str = ""
-    GEMINI_MODEL_NAME: str = "gemini-1.5-flash"
+    GEMINI_MODEL_NAME: str = "gemini-flash-latest"
 
     # Rate limiting
     RATE_LIMIT_PER_MINUTE: int = 60

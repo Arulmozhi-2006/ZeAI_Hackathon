@@ -7,6 +7,56 @@ import { Badge } from '../components/Badge'
 import { useAuth } from '../hooks/useAuth'
 import { firewallAPI } from '../api/client'
 
+// Lightweight markdown -> HTML for rendering LLM answers (headers, bold, italic, lists, hr, paragraphs)
+const formatMarkdown = (text) => {
+  if (!text) return ''
+  const escapeHtml = (s) => s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+
+  const lines = escapeHtml(text).split('\n')
+  let html = ''
+  let inList = false
+
+  const inline = (s) => s
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    .replace(/`(.+?)`/g, '<code class="bg-slate-100 px-1 rounded text-xs">$1</code>')
+
+  for (const rawLine of lines) {
+    const line = rawLine.trim()
+
+    if (line === '') {
+      if (inList) { html += '</ul>'; inList = false }
+      continue
+    }
+    if (/^---+$/.test(line)) {
+      if (inList) { html += '</ul>'; inList = false }
+      html += '<hr class="my-3 border-slate-200" />'
+      continue
+    }
+    const headerMatch = line.match(/^(#{1,6})\s+(.*)$/)
+    if (headerMatch) {
+      if (inList) { html += '</ul>'; inList = false }
+      const level = headerMatch[1].length
+      const sizeClass = level <= 2 ? 'text-lg font-bold mt-3 mb-1' : 'text-base font-semibold mt-2 mb-1'
+      html += `<div class="${sizeClass}">${inline(headerMatch[2])}</div>`
+      continue
+    }
+    const listMatch = line.match(/^[*-]\s+(.*)$/)
+    if (listMatch) {
+      if (!inList) { html += '<ul class="list-disc pl-5 space-y-1 my-1">'; inList = true }
+      html += `<li>${inline(listMatch[1])}</li>`
+      continue
+    }
+    if (inList) { html += '</ul>'; inList = false }
+    html += `<p class="my-1">${inline(line)}</p>`
+  }
+  if (inList) html += '</ul>'
+  return html
+}
+
 export const InspectorPage = () => {
   const { token } = useAuth()
   const [prompt, setPrompt] = useState('')
@@ -176,18 +226,35 @@ export const InspectorPage = () => {
                   </CardContent>
                 </Card>
 
-                {result.llm_response && (
+                {result.decision === 'ALLOW' && (
                   <Card>
                     <CardHeader>
-                      <CardTitle>LLM Response</CardTitle>
+                      <CardTitle>Answer</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className="bg-slate-50 p-4 rounded-lg">
-                        <p className="text-sm text-slate-700">{result.llm_response}</p>
-                      </div>
-                      <p className="text-xs text-slate-500 mt-2">
-                        Provider: {result.llm_provider} | Latency: {result.latency_ms?.toFixed(0)}ms
-                      </p>
+                      {result.llm_response ? (
+                        <>
+                          <div className="bg-slate-50 p-4 rounded-lg">
+                            <div
+                              className="text-sm text-slate-700"
+                              dangerouslySetInnerHTML={{ __html: formatMarkdown(result.llm_response) }}
+                            />
+                          </div>
+                          <p className="text-xs text-slate-500 mt-2">
+                            Provider: {result.llm_provider} | Latency: {result.latency_ms?.toFixed(0)}ms
+                          </p>
+                        </>
+                      ) : (
+                        <div className="bg-red-50 border border-red-200 p-4 rounded-lg">
+                          <p className="text-sm text-red-700">
+                            The prompt was allowed, but the LLM call failed
+                            {result.llm_error ? `: ${result.llm_error}` : '.'}
+                          </p>
+                          <p className="text-xs text-red-500 mt-1">
+                            Check the backend's GEMINI_API_KEY and GEMINI_MODEL_NAME in .env.
+                          </p>
+                        </div>
+                      )}
                     </CardContent>
                   </Card>
                 )}

@@ -59,5 +59,6 @@ async def analyze(
         hard_block_reason=getattr(result, 'hard_block_reason', None),
         llm_response=result.llm_response,
         llm_provider=result.llm_provider,
+        llm_error=result.llm_error,
         latency_ms=result.latency_ms,
     )

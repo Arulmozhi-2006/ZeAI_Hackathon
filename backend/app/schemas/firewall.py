@@ -23,4 +23,5 @@ class AnalyzeResponse(BaseModel):
     flagged: bool
     llm_response: Optional[str] = None
     llm_provider: Optional[str] = None
+    llm_error: Optional[str] = None
     latency_ms: Optional[float] = None
