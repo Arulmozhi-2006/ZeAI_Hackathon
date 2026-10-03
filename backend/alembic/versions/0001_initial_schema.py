@@ -217,10 +217,29 @@ depends_on = None
 def upgrade() -> None:
     op.execute("CREATE EXTENSION IF NOT EXISTS pgcrypto")
 
-    user_role = postgresql.ENUM("admin", "analyst", "viewer", name="user_role")
-    prompt_status = postgresql.ENUM("PENDING", "PROCESSED", "ERROR", name="prompt_status")
-    decision_type = postgresql.ENUM("ALLOW", "BLOCK", name="decision_type")
-    severity_level = postgresql.ENUM("LOW", "MEDIUM", "HIGH", "CRITICAL", name="severity_level")
+    user_role = postgresql.ENUM(
+        "admin", "analyst", "viewer",
+        name="user_role",
+        create_type=False
+    )
+
+    prompt_status = postgresql.ENUM(
+        "PENDING", "PROCESSED", "ERROR",
+        name="prompt_status",
+        create_type=False
+    )
+
+    decision_type = postgresql.ENUM(
+        "ALLOW", "BLOCK",
+        name="decision_type",
+        create_type=False
+    )
+
+    severity_level = postgresql.ENUM(
+        "LOW", "MEDIUM", "HIGH", "CRITICAL",
+        name="severity_level",
+        create_type=False
+    )
 
     user_role.create(op.get_bind(), checkfirst=True)
     prompt_status.create(op.get_bind(), checkfirst=True)
