@@ -1,7 +1,17 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, NavLink } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
-import { Menu, X, LogOut, Shield } from 'lucide-react'
+import { 
+  Menu, 
+  X, 
+  LogOut, 
+  Shield,
+  LayoutDashboard,
+  ScanSearch,
+  FileText,
+  BarChart3,
+  Settings 
+} from 'lucide-react'
 
 export function Layout({ children }) {
   const [mobileOpen, setMobileOpen] = useState(false)
@@ -9,11 +19,11 @@ export function Layout({ children }) {
   const navigate = useNavigate()
 
   const navItems = [
-    { label: 'Dashboard', href: '/dashboard' },
-    { label: 'Inspector', href: '/inspector' },
-    { label: 'Logs', href: '/logs' },
-    { label: 'Analytics', href: '/analytics' },
-    { label: 'Settings', href: '/settings' },
+    { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+    { label: 'Inspector', href: '/inspector', icon: ScanSearch },
+    { label: 'Logs', href: '/logs', icon: FileText },
+    { label: 'Analytics', href: '/analytics', icon: BarChart3 },
+    { label: 'Settings', href: '/settings', icon: Settings },
   ]
 
   const handleLogout = () => {
@@ -43,14 +53,20 @@ export function Layout({ children }) {
             {/* Desktop Navigation */}
             <nav className="hidden md:flex items-center gap-1">
               {navItems.map(item => (
-                <a
+                <NavLink
                   key={item.href}
-                  href={item.href}
-                  className="px-3 py-2 rounded-lg text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-all duration-200"
+                  to={item.href}
+                  className={({ isActive }) =>
+                    `px-3 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-all duration-200 ${
+                      isActive
+                        ? 'text-blue-600 bg-blue-50'
+                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                    }`
+                  }
                 >
-                  <span className="mr-1">{item.icon}</span>
+                  {item.icon && <item.icon className="w-4 h-4" />}
                   {item.label}
-                </a>
+                </NavLink>
               ))}
             </nav>
 
@@ -86,14 +102,20 @@ export function Layout({ children }) {
             <nav className="md:hidden pb-4 space-y-2">
 
               {navItems.map(item => (
-                <a
+                <NavLink
                   key={item.href}
-                  href={item.href}
-                  className="block px-3 py-2 rounded-lg text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-all"
-                >
-                  <span className="mr-2">{item.icon}</span>
+                  to={item.href}
+                  className={({ isActive }) =>
+                    `block px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                      isActive
+                        ? 'text-blue-600 bg-blue-50'
+                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                      }`
+                    }
+                  >
+                  {item.icon && <item.icon className="w-4 h-4" />}
                   {item.label}
-                </a>
+                </NavLink>
               ))}
 
               <button
